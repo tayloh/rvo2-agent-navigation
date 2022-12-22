@@ -76,6 +76,9 @@ public class SimulationController : MonoBehaviour
     public float AgentMaxSpeed = 1.5f;
     public ScenarioType Scenario = ScenarioType.Blocks;
 
+    public bool RecordAgentsVsTime = false;
+    private List<int> _numAgentsEvacuatedVsTime = new List<int>();
+
     [SerializeField] private GameObject _agentGameObject;
     [SerializeField] private GameObject _quadObstacleGameObject;
     [SerializeField] private GameObject _exitGameObject;
@@ -143,15 +146,27 @@ public class SimulationController : MonoBehaviour
             UpdateVisualization();
             UpdateAgentGoals();
             UpdatePreferredVelocities();
+
             Simulator.Instance.doStep();
+
+            // If recording evacuated vs. time
+            if (RecordAgentsVsTime)
+            {
+                int evacuated = GetNumberOfAgentsEvacuated();
+                _numAgentsEvacuatedVsTime.Add(evacuated);
+            }
         }
         // If all agents reached the goal, check if another run should be done
         else if (_runCount < Runs)
         {
-            // Does not work since agent ids are not reset in the Simulator
             Debug.Log(Simulator.Instance.getGlobalTime());
-
             _writer.WriteEvacuationTime(Simulator.Instance.getGlobalTime());
+            
+            if (RecordAgentsVsTime)
+            {
+                _writer.WriteNumAgentsVsTime(_numAgentsEvacuatedVsTime);
+                _numAgentsEvacuatedVsTime.Clear();
+            }
 
             // Reset and rerun selected scenario
             ResetScenario();
@@ -163,6 +178,12 @@ public class SimulationController : MonoBehaviour
         {
             Debug.Log(Simulator.Instance.getGlobalTime());
             _writer.WriteEvacuationTime(Simulator.Instance.getGlobalTime());
+
+            if (RecordAgentsVsTime)
+            {
+                _writer.WriteNumAgentsVsTime(_numAgentsEvacuatedVsTime);
+                _numAgentsEvacuatedVsTime.Clear();
+            }
 
             Debug.Log("Simulated " + _runCount + " runs.");
             Debug.Log("Evacuation times written to " + _writer.GetPath());
@@ -506,7 +527,6 @@ public class SimulationController : MonoBehaviour
 
     private bool AllAgentsReachedFinalGoal()
     {
-        // TODO: Consider this returning the number of agents that have reached their goal instead
         foreach (int id in _agentGameObjectsMap.Keys)
         {
             if (RVOMath.absSq(Simulator.Instance.getAgentPosition(id) - _agentPathsMap[id].GetLastGoal()) > GoalRadius * GoalRadius)
@@ -623,6 +643,19 @@ public class SimulationController : MonoBehaviour
         }
         _exitGameObjects.Clear();
         _exitPositions.Clear();
+    }
+
+    private int GetNumberOfAgentsEvacuated()
+    {
+        int numEvacuated = 0;
+        foreach (int id in _agentGameObjectsMap.Keys)
+        {
+            if (RVOMath.absSq(Simulator.Instance.getAgentPosition(id) - _agentPathsMap[id].GetLastGoal()) < GoalRadius * GoalRadius)
+            {
+                numEvacuated++;
+            }
+        }
+        return numEvacuated;
     }
 
     public enum ScenarioType

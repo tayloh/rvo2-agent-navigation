@@ -12,10 +12,12 @@ public class SimulationDataWriter
     private static string s_simulationDataPath = "C:\\Users\\taylo\\Desktop\\masters\\atcg\\Agent Navigation\\implementations\\simulation_data\\";
 
     private string _filePath;
+    private string _filePathAgentsVsTime;
 
     public SimulationDataWriter(int numAgents, int numExits, int numRuns)
     {
         _filePath = s_simulationDataPath + DateTime.Now.Ticks + "_Evac" + "_A" + numAgents + "_E" + numExits + "_R" + numRuns + ".txt";
+        _filePathAgentsVsTime = _filePath + ".extra";
 
         ResetFileContents();
     }
@@ -23,6 +25,11 @@ public class SimulationDataWriter
     private void ResetFileContents()
     {
         using (StreamWriter sw = new StreamWriter(_filePath, false))
+        {
+            sw.Write(string.Empty);
+        }
+
+        using (StreamWriter sw = new StreamWriter(_filePathAgentsVsTime, false))
         {
             sw.Write(string.Empty);
         }
@@ -58,6 +65,18 @@ public class SimulationDataWriter
         using (StreamWriter sw = new StreamWriter(_filePath, true))
         {
             sw.WriteLine(text);
+        }
+    }
+
+    public void WriteNumAgentsVsTime(List<int> numEvacuatedAgents)
+    {
+        using (StreamWriter sw = new StreamWriter(_filePathAgentsVsTime, true))
+        {
+            foreach (int count in numEvacuatedAgents)
+            {
+                sw.WriteLine(count.ToString(CultureInfo.InvariantCulture));
+            }
+            sw.Write("\n");
         }
     }
 

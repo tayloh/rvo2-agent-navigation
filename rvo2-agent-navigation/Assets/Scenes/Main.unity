@@ -332,15 +332,16 @@ MonoBehaviour:
   FinalGoalY: 65
   WallWidth: 2.5
   WallLength: 40
-  Runs: 10
-  NumAgents: 75
-  ExitWidth: 4
+  Runs: 3
+  NumAgents: 100
+  ExitWidth: 3
   DistanceBetweenExits: 8
-  NumExits: 3
+  NumExits: 2
   SimulationTimeStep: 0.25
   AgentRadius: 0.75
   AgentMaxSpeed: 1.5
   Scenario: 1
+  RecordAgentsVsTime: 0
   _agentGameObject: {fileID: 2622233536393053162, guid: 0006940ba4ec70b489efe1eb7b0e1deb, type: 3}
   _quadObstacleGameObject: {fileID: 5437132141762699474, guid: 08c72a0068a341046afa7302de54fe2a, type: 3}
   _exitGameObject: {fileID: 6965518482689734474, guid: e97ff38cffafadc49bef2b43a305e00c, type: 3}
