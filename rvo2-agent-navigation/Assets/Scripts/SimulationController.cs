@@ -426,10 +426,11 @@ public class SimulationController : MonoBehaviour
     {
         foreach (int id in _agentGameObjectsMap.Keys)
         {
+            Vector2 currentAgentPosition = Simulator.Instance.getAgentPosition(id);
+
             // Hack for exits scenario
             // If they exit through a door, just have them go straight for the exit
             // If they are not past a door, have them navigate to the closest door
-            Vector2 currentAgentPosition = Simulator.Instance.getAgentPosition(id);
             if (Scenario == ScenarioType.Exits && currentAgentPosition.y() > WallLength - WallWidth / 4)
             {
                 _agentPathsMap[id].SetCurrentGoal(_finalGoalPosition);
@@ -438,11 +439,15 @@ public class SimulationController : MonoBehaviour
             {
                 _agentPathsMap[id].SetCurrentGoal(FindClosestExit(currentAgentPosition));
 
-                //Debug.Log(_agentGameObjectsMap[id].gameObject + " has goal " + _agentPathsMap[id].GetCurrentGoal());
+                // Color agents by their exit if they have not yet exited
+                Color exitColor = GetColorByPosition(currentAgentPosition);
+                SetAgentColor(id, exitColor);
+
             }
             else if (RVOMath.absSq(currentAgentPosition - _agentPathsMap[id].GetCurrentGoal()) < (ExitWidth / 2)*(ExitWidth / 2))
             {
                 // Won't get run in the Exits scenario
+                // Thus, AgentPath is useless in current implementation of Exits scenario
                 _agentPathsMap[id].Next();
             }
         }
@@ -464,6 +469,35 @@ public class SimulationController : MonoBehaviour
         }
 
         return closestExit;
+    }
+
+    private int FindIndexOfClosestExit(Vector2 fromPosition)
+    {
+        float minDistance = float.MaxValue;
+        int closestExitIndex = -1;
+
+        for (int i = 0; i < _exitPositions.Count; i++)
+        {
+            Vector2 exit = _exitPositions[i];
+            float distanceSquared = RVOMath.absSq(fromPosition - exit);
+            if (distanceSquared < minDistance)
+            {
+                minDistance = distanceSquared;
+                closestExitIndex = i;
+            }
+        }
+        return closestExitIndex;
+    }
+
+    private Color GetColorByPosition(Vector2 position)
+    {
+        int index = FindIndexOfClosestExit(position);
+        return _exitColors[index];
+    }
+
+    private void SetAgentColor(int id, Color color)
+    {
+        _agentGameObjectsMap[id].gameObject.GetComponent<Renderer>().material.SetColor("_Color", color);
     }
 
     private bool AllAgentsReachedFinalGoal()
