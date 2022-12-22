@@ -78,6 +78,7 @@ public class SimulationController : MonoBehaviour
 
     [SerializeField] private GameObject _agentGameObject;
     [SerializeField] private GameObject _quadObstacleGameObject;
+    [SerializeField] private GameObject _exitGameObject;
 
     private Vector2 _finalGoalPosition;
 
@@ -87,6 +88,13 @@ public class SimulationController : MonoBehaviour
     private Dictionary<int, AgentPath> _agentPathsMap = new Dictionary<int, AgentPath>();
 
     private List<Vector2> _exitPositions = new List<Vector2>();
+    private List<GameObject> _exitGameObjects = new List<GameObject>();
+    private List<Color> _exitColors = new List<Color>() { 
+        new Color((float)104/255, (float)32/255, (float)135/255, 1.0f), 
+        new Color((float)232/255, (float)95/255, (float)21/255, 1.0f), 
+        new Color((float)31/255,(float)31/255,(float)31/255, 1.0f), 
+        new Color((float)40/255, (float)162/255, (float)168/255, 1.0f) 
+    };
 
     private Random _random = new Random();
     private int _runCount = 1;
@@ -250,6 +258,8 @@ public class SimulationController : MonoBehaviour
                 new Vector2(WallLength, northWallsMaxY));
             AddQuadObstacle(endingWall);
 
+            exitMiddlePositions.Add(new Vector2(WallLength - startX - ExitWidth/2, WallLength));
+
         }
 
         _exitPositions = exitMiddlePositions;
@@ -281,6 +291,9 @@ public class SimulationController : MonoBehaviour
 
             AddAgent(agentSpawnPosition, path);
         }
+
+        // -------------VISUALIZE EXITS-------------
+        VisualizeExits();
 
     }
 
@@ -352,6 +365,9 @@ public class SimulationController : MonoBehaviour
         // Same here
         DeleteAllObstacles();
 
+        // Same for exits
+        ClearExitsAndVisualization();
+
         Simulator.Instance.Clear();
     }
 
@@ -414,7 +430,7 @@ public class SimulationController : MonoBehaviour
             // If they exit through a door, just have them go straight for the exit
             // If they are not past a door, have them navigate to the closest door
             Vector2 currentAgentPosition = Simulator.Instance.getAgentPosition(id);
-            if (Scenario == ScenarioType.Exits && currentAgentPosition.y() > WallLength - WallWidth / 2)
+            if (Scenario == ScenarioType.Exits && currentAgentPosition.y() > WallLength - WallWidth / 4)
             {
                 _agentPathsMap[id].SetCurrentGoal(_finalGoalPosition);
             }
@@ -545,6 +561,30 @@ public class SimulationController : MonoBehaviour
             LeanPool.Despawn(_quadObstacleGameObjects[i]);
         }
         _quadObstacleGameObjects.Clear();
+    }
+
+    private void VisualizeExits()
+    {
+        for (int i = 0; i < _exitPositions.Count; i++)
+        {
+            GameObject go = LeanPool.Spawn(
+                _exitGameObject, 
+                new Vector3(_exitPositions[i].x(), 0, _exitPositions[i].y()), 
+                Quaternion.identity);
+            _exitGameObjects.Add(go);
+
+            go.GetComponent<Renderer>().material.SetColor("_Color", _exitColors[i]);
+        }
+    }
+
+    private void ClearExitsAndVisualization()
+    {
+        for (int i = 0; i < _exitGameObjects.Count; i++)
+        {
+            LeanPool.Despawn(_exitGameObjects[i]);
+        }
+        _exitGameObjects.Clear();
+        _exitPositions.Clear();
     }
 
     public enum ScenarioType
