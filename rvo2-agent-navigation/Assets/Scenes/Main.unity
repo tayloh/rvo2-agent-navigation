@@ -329,9 +329,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   GoalRadius: 20
-  Runs: 3
-  NumAgents: 20
-  ExitWidth: 6
+  Runs: 10
+  NumAgents: 50
+  ExitWidth: 3
   NumExits: 1
   SimulationTimeStep: 0.25
   AgentRadius: 0.75
