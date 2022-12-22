@@ -333,10 +333,10 @@ MonoBehaviour:
   WallWidth: 2.5
   WallLength: 40
   Runs: 10
-  NumAgents: 100
+  NumAgents: 75
   ExitWidth: 4
   DistanceBetweenExits: 8
-  NumExits: 4
+  NumExits: 3
   SimulationTimeStep: 0.25
   AgentRadius: 0.75
   AgentMaxSpeed: 1.5

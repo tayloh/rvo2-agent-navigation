@@ -120,7 +120,11 @@ public class SimulationController : MonoBehaviour
         }
 
         _finalGoalPosition = new Vector2(WallLength / 2, FinalGoalY);
+        
         _writer = new SimulationDataWriter(NumAgents, NumExits, Runs);
+        _writer.WriteSimulationParameters(GoalRadius, FinalGoalY, WallWidth, WallLength, Runs, NumAgents,
+            ExitWidth, DistanceBetweenExits, NumExits, SimulationTimeStep, AgentRadius, AgentMaxSpeed);
+        
         SetupScenario();
 
     }
