@@ -69,6 +69,7 @@ public class SimulationController : MonoBehaviour
     public int Runs = 10;
     public int NumAgents = 100;
     public float ExitWidth = 2.0f;
+    public float DistanceBetweenExits = 10.0f;
     [Range(1, 4)] public int NumExits = 1;
     public float SimulationTimeStep = 0.25f;
     public float AgentRadius = 0.75f;
@@ -83,17 +84,32 @@ public class SimulationController : MonoBehaviour
     private List<GameObject> _quadObstacleGameObjects = new List<GameObject>();
 
     private Dictionary<int, GameObject> _agentGameObjectsMap = new Dictionary<int, GameObject>();
-    //private Dictionary<int, Vector2> _goalPositionsMap = new Dictionary<int, Vector2>();
     private Dictionary<int, AgentPath> _agentPathsMap = new Dictionary<int, AgentPath>();
+
+    private List<Vector2> _exitPositions = new List<Vector2>();
 
     private Random _random = new Random();
     private int _runCount = 1;
 
     private SimulationDataWriter _writer;
 
+    private bool _shouldRun = true;
+
     // Start is called before the first frame update
     void Start()
     {
+        if (NumExits == 1 && ExitWidth > WallLength)
+        {
+            Debug.Log("Exit width is larger than WallLength");
+            _shouldRun = false;
+            return;
+        }
+        else if (NumExits * ExitWidth + DistanceBetweenExits * (NumExits - 1) > WallLength)
+        {
+            Debug.Log("Exit parameters (NumExits, ExitWidth, DistanceBetweenExit) are incompatible with WallLength");
+            _shouldRun = false;
+            return;
+        }
 
         _finalGoalPosition = new Vector2(WallLength / 2, FinalGoalY);
         _writer = new SimulationDataWriter(NumAgents, NumExits, Runs);
@@ -104,6 +120,8 @@ public class SimulationController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (!_shouldRun) return;
+
         if (_runCount > Runs) return;
 
         if (!AllAgentsReachedFinalGoal())
@@ -159,67 +177,109 @@ public class SimulationController : MonoBehaviour
         Simulator.Instance.setTimeStep(SimulationTimeStep);
         Simulator.Instance.setAgentDefaults(15.0f, 10, 5.0f, 5.0f, AgentRadius, AgentMaxSpeed, new Vector2(0.0f, 0.0f));
 
-        float minX = WallWidth * 2;
-        float maxX = WallLength - WallWidth * 2;
-        float minY = WallWidth * 2;
-        float maxY = WallLength / 2;
-
+        // -------------OBSTACLES-------------
 
         // 3 Walls
-        List<Vector2> wallSouth = new List<Vector2>();
-        wallSouth.Add(new Vector2(WallLength, WallWidth));
-        wallSouth.Add(new Vector2(0.0f, WallWidth));
-        wallSouth.Add(new Vector2(0.0f, 0.0f));
-        wallSouth.Add(new Vector2(WallLength, 0.0f));
-        AddQuadObstacle(wallSouth);
 
-        List<Vector2> wallWest = new List<Vector2>();
-        wallWest.Add(new Vector2(0.0f, WallLength));
-        wallWest.Add(new Vector2(-WallWidth, WallLength));
-        wallWest.Add(new Vector2(-WallWidth, 0.0f));
-        wallWest.Add(new Vector2(0.0f, 0.0f));
-        AddQuadObstacle(wallWest);
+        // South wall
+        AddQuadObstacle(ComputeObstacleVertices(new Vector2(0.0f, 0.0f), new Vector2(WallLength, WallWidth)));
 
-        List<Vector2> wallEast = new List<Vector2>();
-        wallEast.Add(new Vector2(WallLength, 0.0f));
-        wallEast.Add(new Vector2(WallLength+WallWidth, 0.0f));
-        wallEast.Add(new Vector2(WallLength+WallWidth, WallLength));
-        wallEast.Add(new Vector2(WallLength, WallLength));
-        AddQuadObstacle(wallEast);
+        // West wall
+        AddQuadObstacle(ComputeObstacleVertices(new Vector2(-WallWidth, 0.0f), new Vector2(0.0f, WallLength)));
 
-        // 2 Exits
+        // East wall
+        AddQuadObstacle(ComputeObstacleVertices(new Vector2(WallLength, 0), new Vector2(WallLength+WallWidth, WallLength)));
+
+        // North walls
+        float northWallsMinY = WallLength - WallWidth;
+        float northWallsMaxY = WallLength;
+        List<Vector2> exitMiddlePositions = new List<Vector2>();
+
+        // Special case
+        if (NumExits == 1)
+        {
+            float wall1_MinX = 0.0f;
+            float wall1_MaxX = WallLength / 2 - ExitWidth / 2;
+            List<Vector2> wall1 = ComputeObstacleVertices(
+                new Vector2(wall1_MinX, northWallsMinY), 
+                new Vector2(wall1_MaxX, northWallsMaxY));
+            AddQuadObstacle(wall1);
+
+            float wall2_MinX = WallLength / 2 + ExitWidth / 2;
+            float wall2_MaxX = WallLength;
+            List<Vector2> wall2 = ComputeObstacleVertices(
+                new Vector2(wall2_MinX, northWallsMinY),
+                new Vector2(wall2_MaxX, northWallsMaxY));
+            AddQuadObstacle(wall2);
+
+            // Only one exit
+            exitMiddlePositions.Add(new Vector2(WallLength / 2, WallLength + WallWidth));
+        }
+        else if (NumExits > 1)
+        {
+            float totalDistanceForExitsAndSpacing = NumExits * ExitWidth + DistanceBetweenExits * (NumExits - 1);
+            float startX = (WallLength - totalDistanceForExitsAndSpacing) / 2;
+
+            // Starting wall
+            List<Vector2> startWall = ComputeObstacleVertices(
+                new Vector2(0.0f, northWallsMinY),
+                new Vector2(startX, northWallsMaxY));
+            AddQuadObstacle(startWall);
+
+            // Middle walls
+            for (int i = 1; i < NumExits; i++)
+            {
+                float wallMinX = startX + i * ExitWidth + (i-1) * DistanceBetweenExits;
+                float wallMaxX = wallMinX + DistanceBetweenExits;
+                //Debug.Log(wallMinX);
+                //Debug.Log(wallMaxX);
+
+                List<Vector2> wall = ComputeObstacleVertices(
+                    new Vector2(wallMinX, northWallsMinY),
+                    new Vector2(wallMaxX, northWallsMaxY));
+                AddQuadObstacle(wall);
+
+                //Vector2 exitMiddle = new Vector2(wallMinX + ExitWidth / 2, WallLength + WallWidth);
+                Vector2 exitMiddle = new Vector2(wallMinX - ExitWidth / 2, WallLength);
+                exitMiddlePositions.Add(exitMiddle);
+            }
+
+            // Ending wall
+            List<Vector2> endingWall = ComputeObstacleVertices(
+                new Vector2(WallLength - startX, northWallsMinY),
+                new Vector2(WallLength, northWallsMaxY));
+            AddQuadObstacle(endingWall);
+
+        }
+
+        _exitPositions = exitMiddlePositions;
 
         // Construct walls such that there are NumExits exits
         // Number of north walls = NumExits - 1
         // Need special case for 1 exit (can't have it be a large gap) -> 2 walls
         // Exit params to consider: NumExits, ExitWidth, DistanceBetweenExits
         // Construct some formula considering these parameters
-        List<Vector2> wallNorth1 = new List<Vector2>();
-        wallNorth1.Add(new Vector2(ExitWidth, WallLength - WallWidth));
-        wallNorth1.Add(new Vector2(WallLength - ExitWidth, WallLength - WallWidth));
-        wallNorth1.Add(new Vector2(WallLength - ExitWidth, WallLength));
-        wallNorth1.Add(new Vector2(ExitWidth, WallLength));
-        AddQuadObstacle(wallNorth1);
 
         Simulator.Instance.processObstacles();
 
-        // Left to right
-        List<Vector2> goals = new List<Vector2> { new Vector2(-WallWidth, 65.0f), new Vector2(WallLength + WallWidth, 65.0f) };
-        List<Vector2> exits = new List<Vector2> { 
-            new Vector2(ExitWidth / 2, WallLength + WallWidth), 
-            new Vector2(WallLength - ExitWidth / 2, WallLength + WallWidth) 
-        };
+        // -------------AGENTS AND PATHS-------------
+
+        float minX = WallWidth * 2;
+        float maxX = WallLength - WallWidth * 2;
+        float minY = WallWidth * 2;
+        float maxY = WallLength / 2;
 
         for (int i = 0; i < NumAgents; i++)
         {
             float x = minX + (float)_random.NextDouble() * maxX;
             float y = minY + (float)_random.NextDouble() * maxY;
 
-            int index = Mathf.RoundToInt((float)_random.NextDouble() * (goals.Count - 1));
+            //int index = Mathf.RoundToInt((float)_random.NextDouble() * (exitMiddlePositions.Count - 1));
 
-            List<Vector2> path = new List<Vector2> { exits[index], _finalGoalPosition };
+            Vector2 agentSpawnPosition = new Vector2(x, y);
+            List<Vector2> path = new List<Vector2> { FindClosestExit(agentSpawnPosition), _finalGoalPosition };
 
-            AddAgent(new Vector2(x, y), path);
+            AddAgent(agentSpawnPosition, path);
         }
 
     }
@@ -295,6 +355,17 @@ public class SimulationController : MonoBehaviour
         Simulator.Instance.Clear();
     }
 
+    private List<Vector2> ComputeObstacleVertices(Vector2 bottomLeft, Vector2 topRight)
+    {
+        List<Vector2> vertices = new List<Vector2>();
+        vertices.Add(bottomLeft);
+        vertices.Add(new Vector2(topRight.x(), bottomLeft.y()));
+        vertices.Add(topRight);
+        vertices.Add(new Vector2(bottomLeft.x(), topRight.y()));
+
+        return vertices;
+    }
+
     private void UpdatePreferredVelocities()
     {
         foreach (int id in _agentGameObjectsMap.Keys)
@@ -341,15 +412,42 @@ public class SimulationController : MonoBehaviour
         {
             // Hack for exits scenario
             // If they exit through a door, just have them go straight for the exit
-            if (Scenario == ScenarioType.Exits && Simulator.Instance.getAgentPosition(id).y() > WallLength)
+            // If they are not past a door, have them navigate to the closest door
+            Vector2 currentAgentPosition = Simulator.Instance.getAgentPosition(id);
+            if (Scenario == ScenarioType.Exits && currentAgentPosition.y() > WallLength - WallWidth / 2)
             {
                 _agentPathsMap[id].SetCurrentGoal(_finalGoalPosition);
             }
-            else if (RVOMath.absSq(Simulator.Instance.getAgentPosition(id) - _agentPathsMap[id].GetCurrentGoal()) < (ExitWidth / 2)*(ExitWidth / 2))
+            else if (Scenario == ScenarioType.Exits && currentAgentPosition.y() < WallLength + WallWidth)
             {
+                _agentPathsMap[id].SetCurrentGoal(FindClosestExit(currentAgentPosition));
+
+                //Debug.Log(_agentGameObjectsMap[id].gameObject + " has goal " + _agentPathsMap[id].GetCurrentGoal());
+            }
+            else if (RVOMath.absSq(currentAgentPosition - _agentPathsMap[id].GetCurrentGoal()) < (ExitWidth / 2)*(ExitWidth / 2))
+            {
+                // Won't get run in the Exits scenario
                 _agentPathsMap[id].Next();
             }
         }
+    }
+
+    private Vector2 FindClosestExit(Vector2 fromPosition)
+    {
+        float minDistance = float.MaxValue;
+        Vector2 closestExit = new Vector2();
+
+        foreach (Vector2 exit in _exitPositions)
+        {
+            float distanceSquared = RVOMath.absSq(fromPosition - exit);
+            if (distanceSquared < minDistance)
+            {
+                minDistance = distanceSquared;
+                closestExit = exit;
+            }
+        }
+
+        return closestExit;
     }
 
     private bool AllAgentsReachedFinalGoal()
