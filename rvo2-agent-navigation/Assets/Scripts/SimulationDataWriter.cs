@@ -5,6 +5,9 @@ using System;
 using System.IO;
 using System.Globalization;
 
+/// <summary>
+/// File writer specialized for writing simulation data.
+/// </summary>
 public class SimulationDataWriter
 {
     // Global path to simulation data
@@ -14,6 +17,13 @@ public class SimulationDataWriter
     private string _filePath;
     private string _filePathAgentsVsTime;
 
+    /// <summary>
+    /// Constructs a SimulationDataWriter. Data from the simulation will be written to
+    /// a file named UniqueID_Evac_A{#agents}_E{#exits}_{#runs}.txt
+    /// </summary>
+    /// <param name="numAgents"></param>
+    /// <param name="numExits"></param>
+    /// <param name="numRuns"></param>
     public SimulationDataWriter(int numAgents, int numExits, int numRuns)
     {
         _filePath = s_simulationDataPath + DateTime.Now.Ticks + "_Evac" + "_A" + numAgents + "_E" + numExits + "_R" + numRuns + ".txt";
@@ -35,6 +45,21 @@ public class SimulationDataWriter
         }
     }
 
+    /// <summary>
+    /// Writes the specified simulation parameters to the data file.
+    /// </summary>
+    /// <param name="goalRadius"></param>
+    /// <param name="finalGoalY"></param>
+    /// <param name="wallWidth"></param>
+    /// <param name="wallLength"></param>
+    /// <param name="runs"></param>
+    /// <param name="numAgents"></param>
+    /// <param name="exitWidth"></param>
+    /// <param name="distanceBetweenExits"></param>
+    /// <param name="numExits"></param>
+    /// <param name="simulationTimeStep"></param>
+    /// <param name="agentRadius"></param>
+    /// <param name="agentMaxSpeed"></param>
     public void WriteSimulationParameters(float goalRadius, float finalGoalY, float wallWidth, float wallLength,
         int runs, int numAgents, float exitWidth, float distanceBetweenExits, int numExits, float simulationTimeStep,
         float agentRadius, float agentMaxSpeed)
@@ -59,6 +84,10 @@ public class SimulationDataWriter
         }
     }
 
+    /// <summary>
+    /// Writes an evacuation time as: "Total time: {time}" to the data file.
+    /// </summary>
+    /// <param name="time"></param>
     public void WriteEvacuationTime(float time)
     {
         string text = "Total time: " + time.ToString(CultureInfo.InvariantCulture);
@@ -68,6 +97,11 @@ public class SimulationDataWriter
         }
     }
 
+    /// <summary>
+    /// Writes a list of the number of evacuated agents at separate time steps.
+    /// Each entry is numEvacuatedAgents is supposed to be one time step apart.
+    /// </summary>
+    /// <param name="numEvacuatedAgents"></param>
     public void WriteNumAgentsVsTime(List<int> numEvacuatedAgents)
     {
         using (StreamWriter sw = new StreamWriter(_filePathAgentsVsTime, true))
@@ -80,6 +114,9 @@ public class SimulationDataWriter
         }
     }
 
+    /// <summary>
+    /// Gets the global file path of the simulation data file.
+    /// </summary>
     public string GetPath()
     {
         return _filePath;
