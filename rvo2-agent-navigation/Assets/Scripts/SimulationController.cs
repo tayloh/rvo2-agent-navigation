@@ -62,23 +62,35 @@ public class SimulationController : MonoBehaviour
 
     }
 
+    [Header("Simulation")]
+    public int Runs = 10;
+    public float SimulationTimeStep = 0.25f;
+    public bool RecordAgentsVsTime = false;
+
+    [Tooltip("Blocks scenario is not supported any longer.")]
+    public ScenarioType Scenario = ScenarioType.Exits;
+
+    [Header("Final goal")]
     public float GoalRadius = 20f;
     public float FinalGoalY = 65.0f;
+
+    [Header("Room dimensions")]
     public float WallWidth = 2.5f;
     public float WallLength = 40.0f;
-    public int Runs = 10;
-    public int NumAgents = 100;
+
+    [Header("Exits")]
+    [Range(1, 4)] public int NumExits = 1;
     public float ExitWidth = 2.0f;
     public float DistanceBetweenExits = 10.0f;
-    [Range(1, 4)] public int NumExits = 1;
-    public float SimulationTimeStep = 0.25f;
+
+    [Header("Agents")]
+    public int NumAgents = 100;
     public float AgentRadius = 0.75f;
     public float AgentMaxSpeed = 1.5f;
-    public ScenarioType Scenario = ScenarioType.Blocks;
-
-    public bool RecordAgentsVsTime = false;
+    
     private List<int> _numAgentsEvacuatedVsTime = new List<int>();
 
+    [Header("Dependencies")]
     [SerializeField] private GameObject _agentGameObject;
     [SerializeField] private GameObject _quadObstacleGameObject;
     [SerializeField] private GameObject _exitGameObject;
@@ -122,12 +134,14 @@ public class SimulationController : MonoBehaviour
             return;
         }
 
+        // Put final goal position on the center x-coordinate
         _finalGoalPosition = new Vector2(WallLength / 2, FinalGoalY);
         
         _writer = new SimulationDataWriter(NumAgents, NumExits, Runs);
         _writer.WriteSimulationParameters(GoalRadius, FinalGoalY, WallWidth, WallLength, Runs, NumAgents,
             ExitWidth, DistanceBetweenExits, NumExits, SimulationTimeStep, AgentRadius, AgentMaxSpeed);
         
+        // Call before Simulator.Instance.doStep()
         SetupScenario();
 
     }
@@ -139,14 +153,16 @@ public class SimulationController : MonoBehaviour
 
         if (_runCount > Runs) return;
 
+        // Simulation is done if all agents reached their final goal
         if (!AllAgentsReachedFinalGoal())
         {
-            // Maybe add something to have the simulation run
-            // in realtime (that is, slower)
+            // Updates the simulation and its visualization
+            // Note: the simulation runs as quickly as it can,
+            // each call of Update() results in SimulationTimeStep
+            // time passed in the simulation
             UpdateVisualization();
             UpdateAgentGoals();
             UpdatePreferredVelocities();
-
             Simulator.Instance.doStep();
 
             // If recording evacuated vs. time
@@ -174,6 +190,7 @@ public class SimulationController : MonoBehaviour
 
             _runCount++;
         }
+        // For writing the final run
         else if (_runCount == Runs)
         {
             Debug.Log(Simulator.Instance.getGlobalTime());
@@ -208,11 +225,15 @@ public class SimulationController : MonoBehaviour
     private void SetupExitsScenario()
     {
         Simulator.Instance.setTimeStep(SimulationTimeStep);
+
+        // How to choose the first 4 parameters reasonably
+        // for this type of simulation?
         Simulator.Instance.setAgentDefaults(15.0f, 10, 5.0f, 5.0f, AgentRadius, AgentMaxSpeed, new Vector2(0.0f, 0.0f));
 
         // -------------OBSTACLES-------------
 
         // 3 Walls
+        // Obstacle vertices are computed using (minX, minY), (maxX, maxY)
 
         // South wall
         AddQuadObstacle(ComputeObstacleVertices(new Vector2(0.0f, 0.0f), new Vector2(WallLength, WallWidth)));
@@ -224,11 +245,19 @@ public class SimulationController : MonoBehaviour
         AddQuadObstacle(ComputeObstacleVertices(new Vector2(WallLength, 0), new Vector2(WallLength+WallWidth, WallLength)));
 
         // North walls
+        // Construct walls such that there are NumExits exits
+        // Number of north walls = NumExits - 1
+        // Need special case for 1 exit (can't have it be a large gap) -> 2 walls
+        // Exit params to consider: NumExits, ExitWidth, DistanceBetweenExits
+
         float northWallsMinY = WallLength - WallWidth;
         float northWallsMaxY = WallLength;
+
+        // Keep track of the exit positions while building the north walls
         List<Vector2> exitMiddlePositions = new List<Vector2>();
 
         // Special case
+        // Just add two walls around the exit with the exit in the middle
         if (NumExits == 1)
         {
             float wall1_MinX = 0.0f;
@@ -246,7 +275,7 @@ public class SimulationController : MonoBehaviour
             AddQuadObstacle(wall2);
 
             // Only one exit
-            exitMiddlePositions.Add(new Vector2(WallLength / 2, WallLength + WallWidth));
+            exitMiddlePositions.Add(new Vector2(WallLength / 2, WallLength));
         }
         else if (NumExits > 1)
         {
@@ -283,27 +312,29 @@ public class SimulationController : MonoBehaviour
                 new Vector2(WallLength, northWallsMaxY));
             AddQuadObstacle(endingWall);
 
+            // Add the final exit position (not added in the loop above: 1 more exit than middle walls)
             exitMiddlePositions.Add(new Vector2(WallLength - startX - ExitWidth/2, WallLength));
 
         }
-
+        
+        // Save the exit positions for agent goal planning, see UpdateAgentGoals()
         _exitPositions = exitMiddlePositions;
 
-        // Construct walls such that there are NumExits exits
-        // Number of north walls = NumExits - 1
-        // Need special case for 1 exit (can't have it be a large gap) -> 2 walls
-        // Exit params to consider: NumExits, ExitWidth, DistanceBetweenExits
-        // Construct some formula considering these parameters
-
+        // Process the obstacles such that the Simulator accounts for them
         Simulator.Instance.processObstacles();
 
         // -------------AGENTS AND PATHS-------------
 
+        // Agent starting position bounds, don't start in walls
         float minX = WallWidth * 2;
         float maxX = WallLength - WallWidth * 2;
         float minY = WallWidth * 2;
         float maxY = WallLength / 2;
 
+        // Instantiate agents at random positions within the far half of the room
+        // Add a path consisting of { closest exit, final goal }
+        // Though, note that the current goal is dynamically updated in UpdateAgentGoals()
+        // So the AgentPath became redundant for this scenario
         for (int i = 0; i < NumAgents; i++)
         {
             float x = minX + (float)_random.NextDouble() * maxX;
@@ -375,6 +406,7 @@ public class SimulationController : MonoBehaviour
         obstacle4.Add(new Vector2(-40.0f, -40.0f));
         AddQuadObstacle(obstacle4);
 
+        // Must be called for the obstacles to be accounted for by Simulator
         Simulator.Instance.processObstacles();
     }
     
@@ -398,6 +430,8 @@ public class SimulationController : MonoBehaviour
 
     private List<Vector2> ComputeObstacleVertices(Vector2 bottomLeft, Vector2 topRight)
     {
+        // Vertices added in counterclockwise order as specified 
+        // by RVO2 library
         List<Vector2> vertices = new List<Vector2>();
         vertices.Add(bottomLeft);
         vertices.Add(new Vector2(topRight.x(), bottomLeft.y()));
@@ -469,6 +503,7 @@ public class SimulationController : MonoBehaviour
                 SetAgentColor(id, exitColor);
 
             }
+            // Updates the agent goal as specified in their AgentPath if they reached their current goal
             else if (RVOMath.absSq(currentAgentPosition - _agentPathsMap[id].GetCurrentGoal()) < (ExitWidth / 2)*(ExitWidth / 2))
             {
                 // Won't get run in the Exits scenario
@@ -540,6 +575,11 @@ public class SimulationController : MonoBehaviour
 
     private void AddAgent(Vector2 position, List<Vector2> path)
     {
+        // Adds agent GO to scene via LeanPool
+        // Adds agent to simulation
+        // Adds agent and its ID to map
+        // Adds agent path to map
+
         GameObject go = LeanPool.Spawn(_agentGameObject, new Vector3(position.x(), 0, position.y()), Quaternion.identity);
         int id = Simulator.Instance.addAgent(position);
 
@@ -552,6 +592,10 @@ public class SimulationController : MonoBehaviour
 
     private void DeleteAgent(int id)
     {
+        // Deletes agent from simulation,
+        // from scene
+        // from go map, and path map
+
         Simulator.Instance.delAgent(id);
 
         LeanPool.Despawn(_agentGameObjectsMap[id]);
@@ -563,6 +607,8 @@ public class SimulationController : MonoBehaviour
 
     private void DeleteAllAgents()
     {
+        // Removes all agents from the scene
+        // Then, cleares their references
         foreach (int id in _agentGameObjectsMap.Keys)
         {
             LeanPool.Despawn(_agentGameObjectsMap[id]);
@@ -575,6 +621,11 @@ public class SimulationController : MonoBehaviour
 
     private void AddQuadObstacle(List<Vector2> obstacle)
     {
+        // Adds obstacle to scene
+        // Adds obstacle to GO references
+        // Visualizes the obstacle using custom quad mesh
+        // Adds obstacle to simulation
+
         // Add as gameobject
         GameObject go = LeanPool.Spawn(_quadObstacleGameObject, Vector3.zero, Quaternion.identity);
         _quadObstacleGameObjects.Add(go);
@@ -605,8 +656,9 @@ public class SimulationController : MonoBehaviour
 
     private void DeleteQuadObstacle(int id)
     {
-        // There is no way to remove obstacles from Simulator
-        // But Clear() removes all obstacles
+        // There is no way to remove obstacles from Simulator after processing the obstacle
+        // But Simulator.Instance.Clear() removes all obstacles
+        // Use this method with care...
 
         LeanPool.Despawn(_quadObstacleGameObjects[id]);
         _quadObstacleGameObjects.RemoveAt(id);
@@ -614,6 +666,9 @@ public class SimulationController : MonoBehaviour
 
     private void DeleteAllObstacles()
     {
+        // Deletes all obstacle gameobjects and their references
+        // Should be used in cohesion with Simulator.Instance.Clear()
+        // This just clears their visualization
         for (int i = 0; i < _quadObstacleGameObjects.Count; i++)
         {
             LeanPool.Despawn(_quadObstacleGameObjects[i]);

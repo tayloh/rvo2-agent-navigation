@@ -328,20 +328,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7257222ee58a88a4f94ea3f073b9db1f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  Runs: 3
+  SimulationTimeStep: 0.25
+  RecordAgentsVsTime: 0
+  Scenario: 1
   GoalRadius: 20
   FinalGoalY: 65
   WallWidth: 2
   WallLength: 30
-  Runs: 3
-  NumAgents: 50
-  ExitWidth: 3
+  NumExits: 2
+  ExitWidth: 2
   DistanceBetweenExits: 4
-  NumExits: 4
-  SimulationTimeStep: 0.25
-  AgentRadius: 0.75
+  NumAgents: 100
+  AgentRadius: 0.5
   AgentMaxSpeed: 1.5
-  Scenario: 1
-  RecordAgentsVsTime: 0
   _agentGameObject: {fileID: 2622233536393053162, guid: 0006940ba4ec70b489efe1eb7b0e1deb, type: 3}
   _quadObstacleGameObject: {fileID: 5437132141762699474, guid: 08c72a0068a341046afa7302de54fe2a, type: 3}
   _exitGameObject: {fileID: 6965518482689734474, guid: e97ff38cffafadc49bef2b43a305e00c, type: 3}
