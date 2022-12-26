@@ -1,6 +1,6 @@
-# Evacuation studies in Unity3D using ORCA
+# Evacuation simulation in Unity3D using ORCA
 
-Simulates the evacuation of a rectangular room with a specified number of exits using Optimal Reciprocal Collision Avoidance (ORCA) for agent navigation.
+Simulates the evacuation of a rectangular room with a specified number of exits using Optimal Reciprocal Collision Avoidance (ORCA) for agent navigation. Developed to study the effect of varying exit parameters in evacuation scenarios.
 
 ![scenario](/images/readme.png)
 
@@ -17,12 +17,12 @@ Simulates the evacuation of a rectangular room with a specified number of exits 
 * Final goal position
 * Final goal radius
 
-\*Part of RVO2 library (see Credits).
+\*Part of RVO2 library that implements ORCA (see Credits).
 
 ![parameters](/images/parameters.png)
 
 ## Additional features
-* Simulation data is saved to global path specified in SimulationDataWriter.cs
+* Simulation data (evacuation times per run, and optionally- agents evacuated at each simulated time step) is saved to global path specified in SimulationDataWriter.cs
 
 Possible if you are willing to edit the code, see SimulationController.cs:
 * Custom scenarios: there is support for easily adding quad obstacles, though all polygonal shapes are possible. 
