@@ -71,22 +71,23 @@ public class SimulationController : MonoBehaviour
     public ScenarioType Scenario = ScenarioType.Exits;
 
     [Header("Final goal")]
-    public float GoalRadius = 20f;
-    public float FinalGoalY = 65.0f;
+    public float GoalRadius = 10f;
+    public float FinalGoalY = 20.0f;
 
     [Header("Room dimensions")]
-    public float WallWidth = 2.5f;
-    public float WallLength = 40.0f;
+    public float WallWidth = 0.4f;
+    public float WallLength = 10.0f;
 
     [Header("Exits")]
     [Range(1, 4)] public int NumExits = 1;
-    public float ExitWidth = 2.0f;
-    public float DistanceBetweenExits = 10.0f;
+    public float ExitWidth = 1.0f;
+    public float DistanceBetweenExits = 2.0f;
 
     [Header("Agents")]
     public int NumAgents = 100;
-    public float AgentRadius = 0.75f;
-    public float AgentMaxSpeed = 1.5f;
+    public float AgentRadius = 0.2f;
+    public float AgentMaxSpeed = 1.42f;
+    public bool UseRandomSizeAndSpeed = false;
     
     private List<int> _numAgentsEvacuatedVsTime = new List<int>();
 
@@ -581,7 +582,22 @@ public class SimulationController : MonoBehaviour
         // Adds agent path to map
 
         GameObject go = LeanPool.Spawn(_agentGameObject, new Vector3(position.x(), 0, position.y()), Quaternion.identity);
+        go.transform.localScale = new Vector3(AgentRadius * 2, 1, AgentRadius * 2);
+
         int id = Simulator.Instance.addAgent(position);
+
+        if (UseRandomSizeAndSpeed)
+        {
+            // Radius between 0.32/2 and 0.44/2 
+            float radius = 0.16f + (float)_random.NextDouble() * (0.22f - 0.16f);
+            go.transform.localScale = new Vector3(radius * 2, 1, radius * 2);
+
+            Simulator.Instance.setAgentRadius(id, radius);
+
+            // Speed between 1 m/s and 3 m/s
+            float speed = 1 + (float)_random.NextDouble() * 2.0f;
+            Simulator.Instance.setAgentMaxSpeed(id, speed);
+        }
 
         _agentGameObjectsMap.Add(id, go);
         _agentPathsMap.Add(id, new AgentPath(path));
@@ -684,6 +700,8 @@ public class SimulationController : MonoBehaviour
                 _exitGameObject, 
                 new Vector3(_exitPositions[i].x(), 0, _exitPositions[i].y()), 
                 Quaternion.identity);
+            go.transform.localScale = new Vector3(AgentRadius * 3, 1, AgentRadius * 3);
+
             _exitGameObjects.Add(go);
 
             go.GetComponent<Renderer>().material.SetColor("_Color", _exitColors[i]);
