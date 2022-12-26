@@ -106,9 +106,19 @@ public class SimulationDataWriter
     {
         using (StreamWriter sw = new StreamWriter(_filePathAgentsVsTime, true))
         {
+            int i = 0;
             foreach (int count in numEvacuatedAgents)
             {
-                sw.WriteLine(count.ToString(CultureInfo.InvariantCulture));
+                if (i < numEvacuatedAgents.Count - 1)
+                {
+                    sw.Write(count.ToString(CultureInfo.InvariantCulture) + ",");
+                }
+                else
+                {
+                    sw.Write(count.ToString(CultureInfo.InvariantCulture));
+
+                }
+                i++;
             }
             sw.Write("\n");
         }
