@@ -7,32 +7,36 @@ Simulates the evacuation of a rectangular room with a specified number of exits 
 ## Editable parameters
 * Number of runs
 * Number of agents\*
-* Agent radius\*
-* Agent maximum speed\*
-* Simulation time step\*
+* Agent radius\* (m)
+* Agent maximum speed\* (m / s)
+* Simulation time step\* (s)
 * Number of exits
-* Exit width
-* Exit spacing
-* Room wall length
-* Final goal position
-* Final goal radius
+* Exit width (m)
+* Exit spacing (m)
+* Room wall length (m)
+* Romm wall width (m)
+* Final goal position y offset (m)
+* Final goal radius (m)
 
 \*Part of RVO2 library that implements ORCA (see Credits).
 
 ![parameters](/images/parameters.png)
 
 ## Additional features
-* Simulation data (evacuation times per run, and optionally- agents evacuated at each simulated time step) is saved to global path specified in SimulationDataWriter.cs
+* Simulation data (evacuation times per run, and optionally- agents evacuated at each simulated time step) is saved to the global path specified in SimulationDataWriter.cs.
 
 Possible if you are willing to edit the code, see SimulationController.cs:
 * Custom scenarios: there is support for easily adding quad obstacles, though all polygonal shapes are possible. 
 See SetupExitsScenario() and SetupBlocksScenario() for examples.
 * Pre-planned or condition based agent subgoals (global path).
+* Scripts for handling the simulation data.
 
 ## Requirements
 Unity version 2020.3.32f1
 
-Clone the repository and import it as a new Unity project, and it should work out of the box.
+Clone the repository and import it as a new Unity project.
+
+**OBS:** Change the path for where to store the simulation data in SimulationDataWriter.cs before running.
 
 ## Credits
 * RVO2 C# [Library](https://github.com/snape/RVO2-CS)
