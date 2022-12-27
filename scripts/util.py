@@ -1,8 +1,13 @@
 import os
 
+from scipy.stats import ttest_ind
+
 DATA_DIRECTORY = "./data"
 
 class SimulationDataFileParser:
+    """Parses a simulation data file and contains functions
+    for retrieving the data.
+    """
 
     NUMEXITS = "NumExits"
     RUNS = "Runs"
@@ -51,15 +56,28 @@ class SimulationDataFileParser:
                 
 
     def get_parameters_dict(self):
+        """Returns a dict of the simulation parameters.
+        """
         return self._params_dict
 
     def get_evacuation_times(self):
+        """Returns a list of evacuation times for each run.
+        """
         return self._evacuation_times
 
     def get_agents_vs_time_data(self):
+        """
+        Pre: Simulation was run with Record Agents Vs Time toggled.
+
+        Returns a list of lists containing the agent count after
+        each simulation timestep, for each run. 
+        """
         return self._agent_vs_time_data
     
     def get_parsed_file(self):
+        """Returns the path of the simulation file related to this 
+        object instance.
+        """
         return self._filePath
 
 
@@ -72,8 +90,67 @@ def _collect_data_files(directory):
     return files
 
 def parse_data_files():
+    """Returns a list of SimulationDataParser for each 
+    simulation data file in DATA_DIRECTORY.
+    """
     parsed_data = []
     for file in _collect_data_files(DATA_DIRECTORY):
         parsed_data.append(SimulationDataFileParser(file))
     
     return parsed_data
+
+def get_simulations_by_parameter_value(parsed_data, parameter, value):
+    """
+    parsed_data: [SimulationDataParser]
+    parameter: SimulationDataParser.PARAMETER,
+    value: value to retrieve by 
+
+    Returns a list of SimulationDataParser with parameter==value.
+    """
+    simulations = []
+    for sim_data in parsed_data:
+        if sim_data.get_parameters_dict()[parameter] == value:
+            simulations.append(sim_data)
+    return simulations
+
+def sort_simulations_by_parameter(parsed_data, parameter):
+    """
+    parsed_data: [SimulationDataParser]
+    parameter: SimulationDataParser.PARAMETER
+
+    Returns a list of SimulationDataParser sorted in ascending order
+    by parameter.
+    """
+
+    return sorted(
+        parsed_data, 
+        key=lambda d: d.get_parameters_dict()[parameter])
+
+def get_simulations_by_agents_exits(agents, exits):
+    """Returns all simulations with the specified number of agent
+    and exit counts.
+    """
+    simulations = parse_data_files()
+    agents_filtered = get_simulations_by_parameter_value(
+        simulations, 
+        SimulationDataFileParser.NUMAGENTS,
+        agents)
+    both_filtered = get_simulations_by_parameter_value(
+        agents_filtered, 
+        SimulationDataFileParser.NUMEXITS,
+        exits)
+    
+    return both_filtered
+
+def compute_p_value(null_hyp, alt_hyp):
+    return ttest_ind(null_hyp, alt_hyp).pvalue
+
+def mean(numbers):
+    return sum(numbers) / len(numbers)
+
+def variance(numbers):
+    m = mean(numbers)
+    return sum((x - m)**2 for x in numbers) / len(numbers)
+
+def std(numbers):
+    return variance(numbers)**(1/2)

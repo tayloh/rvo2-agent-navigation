@@ -1,26 +1,135 @@
 import util
 
-# Takes time to import these
-# import numpy as np
-# import scipy.stats as st
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
+
+def example():
+    simulations = util.parse_data_files()
+
+    for num_exits in [1, 2, 3, 4]:
+
+        by_exits = util.get_simulations_by_parameter_value(
+            simulations,
+            util.SimulationDataFileParser.NUMEXITS,
+            num_exits
+        )
+        ordered_by_agents = util.sort_simulations_by_parameter(
+            by_exits,
+            util.SimulationDataFileParser.NUMAGENTS
+        )
+        print(num_exits, " exits")
+        for sim in ordered_by_agents:
+            print(sim.get_parsed_file())
+
+
+def plot_avgevac_times_vs_agent_count_per_exit():
+    simulations = util.parse_data_files()
+    
+    for num_exits in [1, 2, 3, 4]:
+        # One line per exit
+
+        by_exits = util.get_simulations_by_parameter_value(
+            simulations,
+            util.SimulationDataFileParser.NUMEXITS,
+            num_exits
+        )
+        ordered_by_agents = util.sort_simulations_by_parameter(
+            by_exits,
+            util.SimulationDataFileParser.NUMAGENTS
+        )
+
+        means = []
+        stds = []
+        agents = [50, 100, 150]
+        for sim in ordered_by_agents:
+            evac_times = sim.get_evacuation_times()
+            means.append(util.mean(evac_times))
+            stds.append(util.std(evac_times))
+
+        plt.errorbar(agents, means, stds, 
+        label=str(num_exits) + " exits", 
+        linestyle="", marker="o", markersize=3)
+    
+    plt.xticks(agents)
+    plt.xlabel("Number of agents")
+    plt.ylabel("Avg. evacuation time (s)")
+    plt.title("Avg. evacuation times vs. Number of agents")
+    plt.legend()
+    plt.show()
+
+
+def plot_evacuation_times(file):
+    simulation = util.SimulationDataFileParser(file)
+
+    agents = simulation.get_parameters_dict()[util.SimulationDataFileParser.NUMAGENTS]
+    exits = simulation.get_parameters_dict()[util.SimulationDataFileParser.NUMEXITS]
+
+    evac_times = simulation.get_evacuation_times()
+    x_values = [i+1 for i in range(len(evac_times))]
+    plt.xticks([x for x in x_values if x % 2 == 0])
+    plt.xlabel("Run number")
+    plt.ylabel("Evacuation time (s)")
+    plt.title("Evacuation times per run (agents:" + str(agents) + ", exits:" + str(exits) + ")")
+    plt.plot(x_values, evac_times)
+    plt.show()
+
+
+def plot_agents_vs_time(file):
+    simulation = util.SimulationDataFileParser(file)
+
+    agents = simulation.get_parameters_dict()[util.SimulationDataFileParser.NUMAGENTS]
+    exits = simulation.get_parameters_dict()[util.SimulationDataFileParser.NUMEXITS]
+    timestep = simulation.get_parameters_dict()[util.SimulationDataFileParser.TIMESTEP]
+
+    # Grab the first run for instance
+    agents_evaced_each_time_step = simulation.get_agents_vs_time_data()[0]
+
+    x_values = [timestep * i for i in range(len(agents_evaced_each_time_step))]
+
+    plt.xlabel("Time (s)")
+    plt.ylabel("Agents evacuated")
+    plt.title("Agents evacuated vs. time (agents:" + str(agents) + ", exits:" + str(exits) + ")")
+    plt.plot(x_values, simulation.get_agents_vs_time_data()[0])
+    plt.show()
+
+
+def compute_pvalues_for_agent_count(agents):
+    simulations = util.parse_data_files()
+    by_agents = util.get_simulations_by_parameter_value(
+        simulations, 
+        util.SimulationDataFileParser.NUMAGENTS,
+        agents
+    )
+
+    sorted_by_exits = util.sort_simulations_by_parameter(
+        by_agents,
+        util.SimulationDataFileParser.NUMEXITS)
+
+    p_values = []
+    for i in range(1, len(sorted_by_exits)):
+        null_hyp = sorted_by_exits[i-1].get_evacuation_times()
+        alt_hyp = sorted_by_exits[i].get_evacuation_times()
+        p_value = util.compute_p_value(null_hyp, alt_hyp)
+        p_values.append(p_value)
+    
+    return p_values
+
+
+def print_pvalues(agent_counts):
+    for count in agent_counts:
+        pvalues = compute_pvalues_for_agent_count(count)
+        print("p-values for", count, "agents")
+        print(pvalues)
+        print("______________________")
+
 
 def main():
-    parsed_data = util.parse_data_files()
+    print_pvalues([50, 100, 150])
+    plot_avgevac_times_vs_agent_count_per_exit()
+    #plot_evacuation_times(util.get_simulations_by_agents_exits(150, 1)[0].get_parsed_file())
+    #plot_agents_vs_time(util.get_simulations_by_agents_exits(100, 3)[0].get_parsed_file())
     
-    for sim in parsed_data:
-        print(sim.get_parameters_dict())
-        print(sim.get_agents_vs_time_data()[0])
-        print(sim.get_parameters_dict()[util.SimulationDataFileParser.RUNS])
-
-    # TODO: I need one line per number of exits [1, 2, 3, 4]
-    # TODO: One line is- x-axis: agents count, y-axis: avg +-std
-    # https://stackoverflow.com/questions/22481854/plot-mean-and-standard-deviation
     
-    # plt.plot(parsed_data[0].get_agents_vs_time_data()[0])
-    # plt.show()
-    #plt.plot(parser.get_evacuation_times())
-    #plt.show()
+    
 
 if __name__ == "__main__":
     main()
