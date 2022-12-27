@@ -5,7 +5,7 @@ from scipy.stats import ttest_ind
 DATA_DIRECTORY = "./data"
 
 class SimulationDataFileParser:
-    """Parses a simulation data file and contains functions
+    """Parses a simulation data file and contains methods
     for retrieving the data.
     """
 
