@@ -24,6 +24,8 @@ def example():
 def plot_avgevac_times_vs_agent_count_per_exit():
     simulations = util.parse_data_files()
     
+    agents = util.get_agent_counts(simulations)
+
     for num_exits in [1, 2, 3, 4]:
         # One line per exit
 
@@ -39,11 +41,16 @@ def plot_avgevac_times_vs_agent_count_per_exit():
 
         means = []
         stds = []
-        agents = [50, 100, 150]
         for sim in ordered_by_agents:
             evac_times = sim.get_evacuation_times()
             means.append(util.mean(evac_times))
             stds.append(util.std(evac_times))
+
+            print(
+                num_exits, "exits,", 
+                sim.get_parameters_dict()[util.SimulationDataFileParser.NUMAGENTS], "agents",
+                "mean:", util.mean(evac_times),
+                "std:", util.std(evac_times))
 
         plt.errorbar(agents, means, stds, 
         label=str(num_exits) + " exits", 
@@ -123,7 +130,13 @@ def print_pvalues(agent_counts):
 
 
 def main():
-    print_pvalues([50, 100, 150])
+    # Remember that every call to parse_data_files() is quite
+    # expensive... especially if there's a lot of files
+    # Ideally, it should only be called once, so the code above is not that great
+    simulations = util.parse_data_files()
+    agent_counts = util.get_agent_counts(simulations)
+
+    print_pvalues(agent_counts)
     plot_avgevac_times_vs_agent_count_per_exit()
     #plot_evacuation_times(util.get_simulations_by_agents_exits(150, 1)[0].get_parsed_file())
     #plot_agents_vs_time(util.get_simulations_by_agents_exits(100, 3)[0].get_parsed_file())

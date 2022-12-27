@@ -142,6 +142,17 @@ def get_simulations_by_agents_exits(agents, exits):
     
     return both_filtered
 
+def get_agent_counts(simulations):
+    """Returns a list of the used agent counts throughout the 
+    given simulations.
+    """
+    counts = []
+    for sim in simulations:
+        agent_count = sim.get_parameters_dict()[SimulationDataFileParser.NUMAGENTS]
+        if agent_count not in counts:
+            counts.append(agent_count)
+    return counts
+
 def compute_p_value(null_hyp, alt_hyp):
     return ttest_ind(null_hyp, alt_hyp).pvalue
 
