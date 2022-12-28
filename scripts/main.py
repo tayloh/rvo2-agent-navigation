@@ -101,7 +101,7 @@ def plot_evacuation_times(file):
 def plot_agents_vs_time(file):
     """Takes a file path to a simulation file and 
     plots the number of evacuated agents vs. simulation
-    time. Uses the first run in the file (to be changed).
+    time. Uses the slowest run (to be changed).
     """
     simulation = util.SimulationDataFileParser(file)
 
@@ -110,14 +110,15 @@ def plot_agents_vs_time(file):
     timestep = simulation.get_parameters_dict()[util.SimulationDataFileParser.TIMESTEP]
 
     # Grab the first run for instance
-    agents_evaced_each_time_step = simulation.get_agents_vs_time_data()[0]
+    #agents_evaced_each_time_step = simulation.get_agents_vs_time_data()[0]
+    agents_evaced_each_time_step = util.get_slowest_run(simulation)
 
     x_values = [timestep * i for i in range(len(agents_evaced_each_time_step))]
 
     plt.xlabel("Time (s)")
     plt.ylabel("Agents evacuated")
     plt.title("Agents evacuated vs. time (agents:" + str(agents) + ", exits:" + str(exits) + ")")
-    plt.plot(x_values, simulation.get_agents_vs_time_data()[0])
+    plt.plot(x_values, agents_evaced_each_time_step)
     plt.show()
 
 

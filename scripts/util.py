@@ -153,6 +153,20 @@ def get_agent_counts(simulations):
             counts.append(agent_count)
     return counts
 
+def get_fastest_run(simulation):
+    """Given parsed simulation data, 
+    returns the fastest run in that simulation.
+    """
+    runs = simulation.get_agents_vs_time_data()
+    return min(runs, key=len)
+
+def get_slowest_run(simulation):
+    """Given parsed simulation data,
+    returns the slowest run in that simulation.
+    """
+    runs = simulation.get_agents_vs_time_data()
+    return max(runs, key=len)
+
 def compute_p_value(null_hyp, alt_hyp):
     return ttest_ind(null_hyp, alt_hyp).pvalue
 
