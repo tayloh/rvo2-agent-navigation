@@ -327,9 +327,9 @@ public class SimulationController : MonoBehaviour
         // -------------AGENTS AND PATHS-------------
 
         // Agent starting position bounds, don't start in walls
-        float minX = WallWidth * 2;
-        float maxX = WallLength - WallWidth * 2;
-        float minY = WallWidth * 2;
+        float minX = WallWidth;
+        float maxX = WallLength - WallWidth;
+        float minY = 2 * WallWidth;
         float maxY = WallLength / 2;
 
         // Instantiate agents at random positions within the far half of the room
@@ -338,8 +338,8 @@ public class SimulationController : MonoBehaviour
         // So the AgentPath became redundant for this scenario
         for (int i = 0; i < NumAgents; i++)
         {
-            float x = minX + (float)_random.NextDouble() * maxX;
-            float y = minY + (float)_random.NextDouble() * maxY;
+            float x = minX + (float)_random.NextDouble() * (maxX - minX);
+            float y = minY + (float)_random.NextDouble() * (maxY - minY);
 
             //int index = Mathf.RoundToInt((float)_random.NextDouble() * (exitMiddlePositions.Count - 1));
 
