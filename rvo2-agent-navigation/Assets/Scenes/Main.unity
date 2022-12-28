@@ -328,7 +328,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7257222ee58a88a4f94ea3f073b9db1f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Runs: 20
+  Runs: 100
   SimulationTimeStep: 0.25
   RecordAgentsVsTime: 1
   Scenario: 1
@@ -336,10 +336,10 @@ MonoBehaviour:
   FinalGoalY: 20
   WallWidth: 0.4
   WallLength: 10
-  NumExits: 4
+  NumExits: 3
   ExitWidth: 1
   DistanceBetweenExits: 2
-  NumAgents: 150
+  NumAgents: 220
   AgentRadius: 0.2
   AgentMaxSpeed: 1.42
   UseRandomSizeAndSpeed: 0
