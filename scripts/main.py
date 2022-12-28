@@ -3,25 +3,40 @@ import util
 import matplotlib.pyplot as plt
 
 def example():
+    """Example usage of util.
+    """
+
+    # Use parse_data_files() once to get all simulations
+    # in a workable format as SimulationDataFileParsers
     simulations = util.parse_data_files()
 
     for num_exits in [1, 2, 3, 4]:
 
+        # Get all simulations by some parameter value,
+        # in this case the number of exits
         by_exits = util.get_simulations_by_parameter_value(
             simulations,
             util.SimulationDataFileParser.NUMEXITS,
             num_exits
         )
+
+        # Order the simulations by some parameter,
+        # in this case agent count
         ordered_by_agents = util.sort_simulations_by_parameter(
             by_exits,
             util.SimulationDataFileParser.NUMAGENTS
         )
         print(num_exits, " exits")
         for sim in ordered_by_agents:
+            # Prints the associated file
             print(sim.get_parsed_file())
 
 
 def plot_avgevac_times_vs_agent_count_per_exit():
+    """Plots the mean evacuation times vs. agent count
+    for each number of exits [1, 2, 3, 4]. Shows the 
+    standard deviation of each mean as an errorbar.
+    """
     simulations = util.parse_data_files()
     
     agents = util.get_agent_counts(simulations)
@@ -65,6 +80,9 @@ def plot_avgevac_times_vs_agent_count_per_exit():
 
 
 def plot_evacuation_times(file):
+    """Takes a file path to a simulation file and plots the 
+    evacuation times for each run in that simulation.
+    """
     simulation = util.SimulationDataFileParser(file)
 
     agents = simulation.get_parameters_dict()[util.SimulationDataFileParser.NUMAGENTS]
@@ -81,6 +99,10 @@ def plot_evacuation_times(file):
 
 
 def plot_agents_vs_time(file):
+    """Takes a file path to a simulation file and 
+    plots the number of evacuated agents vs. simulation
+    time. Uses the first run in the file (to be changed).
+    """
     simulation = util.SimulationDataFileParser(file)
 
     agents = simulation.get_parameters_dict()[util.SimulationDataFileParser.NUMAGENTS]
@@ -100,6 +122,9 @@ def plot_agents_vs_time(file):
 
 
 def compute_pvalues_for_agent_count(agents):
+    """Computes the p-values for the specified agent count.
+    E.g. from 1 to 2 exits, 2 to 3 exits, 3 to 4 exits.
+    """
     simulations = util.parse_data_files()
     by_agents = util.get_simulations_by_parameter_value(
         simulations, 
@@ -122,6 +147,11 @@ def compute_pvalues_for_agent_count(agents):
 
 
 def print_pvalues(agent_counts):
+    """Computes and prints the p-values for the difference between
+    each consecutive exit number, for each specified agent count.
+    E.g. p-values for 50 agents: from 1 to 2 exits, 2 to 3 exits, 
+    and 3 to 4 exits. Then for 100 agents, and so on.
+    """
     for count in agent_counts:
         pvalues = compute_pvalues_for_agent_count(count)
         print("p-values for", count, "agents")
