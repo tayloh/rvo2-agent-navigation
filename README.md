@@ -14,8 +14,8 @@ Simulates the evacuation of a rectangular room with a specified number of exits 
 * Exit width (m)
 * Exit spacing (m)
 * Room wall length (m)
-* Romm wall width (m)
-* Final goal position y offset (m)
+* Room wall width (m)
+* Final goal position y-offset (m)
 * Final goal radius (m)
 
 \*Part of RVO2 library that implements ORCA (see Credits).
