@@ -41,6 +41,7 @@ def plot_avgevac_times_vs_agent_count_per_exit(print_data=False):
     
     agents = util.get_agent_counts(simulations)
 
+    means_saved = []
     for num_exits in [1, 2, 3, 4]:
         # One line per exit
 
@@ -68,10 +69,23 @@ def plot_avgevac_times_vs_agent_count_per_exit(print_data=False):
                     "mean:", util.mean(evac_times),
                     "std:", util.std(evac_times))
 
+        means_saved.append(means)
         plt.errorbar(agents, means, stds, 
         label=str(num_exits) + " exits", 
         linestyle="", marker="o", markersize=3)
-    
+
+    # Print the multiplicative decrease going from i-1 to i exits
+    if print_data:    
+        avg_of_increases = []
+        for i in range(1, len(means_saved)):
+            avg_increase = 0
+            for j in range(len(means_saved[0])):
+                # One more exit vs one less exit
+                avg_increase += means_saved[i-1][j] / means_saved[i][j]
+            avg_increase /= len(means_saved[0])
+            avg_of_increases.append(avg_increase)
+        print(avg_of_increases)
+
     plt.xticks(agents)
     plt.xlabel("Number of agents")
     plt.ylabel("Avg. evacuation time (s)")
