@@ -32,7 +32,7 @@ def example():
             print(sim.get_parsed_file())
 
 
-def plot_avgevac_times_vs_agent_count_per_exit():
+def plot_avgevac_times_vs_agent_count_per_exit(print_data=False):
     """Plots the mean evacuation times vs. agent count
     for each number of exits [1, 2, 3, 4]. Shows the 
     standard deviation of each mean as an errorbar.
@@ -61,11 +61,12 @@ def plot_avgevac_times_vs_agent_count_per_exit():
             means.append(util.mean(evac_times))
             stds.append(util.std(evac_times))
 
-            print(
-                num_exits, "exits,", 
-                sim.get_parameters_dict()[util.SimulationDataFileParser.NUMAGENTS], "agents,",
-                "mean:", util.mean(evac_times),
-                "std:", util.std(evac_times))
+            if print_data:
+                print(
+                    num_exits, "exits,", 
+                    sim.get_parameters_dict()[util.SimulationDataFileParser.NUMAGENTS], "agents,",
+                    "mean:", util.mean(evac_times),
+                    "std:", util.std(evac_times))
 
         plt.errorbar(agents, means, stds, 
         label=str(num_exits) + " exits", 
@@ -75,7 +76,7 @@ def plot_avgevac_times_vs_agent_count_per_exit():
     plt.xlabel("Number of agents")
     plt.ylabel("Avg. evacuation time (s)")
     plt.title("Avg. evacuation times vs. Number of agents")
-    plt.legend()
+    plt.legend(loc=2)
     plt.show()
 
 
@@ -98,7 +99,7 @@ def plot_evacuation_times(file):
     plt.show()
 
 
-def plot_agents_vs_time(file):
+def plot_agents_vs_time(file, mode="median"):
     """Takes a file path to a simulation file and 
     plots the number of evacuated agents vs. simulation
     time. Uses the slowest run (to be changed).
@@ -111,7 +112,12 @@ def plot_agents_vs_time(file):
 
     # Grab the first run for instance
     #agents_evaced_each_time_step = simulation.get_agents_vs_time_data()[0]
-    agents_evaced_each_time_step = util.get_slowest_run(simulation)
+    if mode == "median":
+        agents_evaced_each_time_step = util.get_median_run(simulation)
+    elif mode == "slowest":
+        agents_evaced_each_time_step = util.get_slowest_run(simulation)
+    elif mode == "fastest":
+        agents_evaced_each_time_step = util.get_fastest_run(simulation)
 
     x_values = [timestep * i for i in range(len(agents_evaced_each_time_step))]
 
@@ -121,12 +127,35 @@ def plot_agents_vs_time(file):
     plt.plot(x_values, agents_evaced_each_time_step)
     plt.show()
 
+def plot_evacuation_times_hist(file):
+    """Takes a file path to a simulation file and plots the 
+    evacuation times as a histogram.
+    """
+    simulation = util.SimulationDataFileParser(file)
 
-def compute_pvalues_for_agent_count(agents):
+    agents = simulation.get_parameters_dict()[util.SimulationDataFileParser.NUMAGENTS]
+    exits = simulation.get_parameters_dict()[util.SimulationDataFileParser.NUMEXITS]
+    timestep = simulation.get_parameters_dict()[util.SimulationDataFileParser.TIMESTEP]
+
+    # Grab the first run for instance
+    #agents_evaced_each_time_step = simulation.get_agents_vs_time_data()[0]
+    evac_times = simulation.get_evacuation_times()
+
+    #x_values = [timestep * i for i in range(len(agents_evaced_each_time_step))]
+
+    plt.xlabel("Evacuation time")
+    plt.ylabel("Frequency")
+    plt.title("Histogram of the evacuation times (agents:" + str(agents) + ", exits:" + str(exits) + ")")
+    plt.hist(evac_times, bins=30)
+    plt.show()
+
+def compute_pvalues_for_agent_count(agents, simulations=None):
     """Computes the p-values for the specified agent count.
     E.g. from 1 to 2 exits, 2 to 3 exits, 3 to 4 exits.
     """
-    simulations = util.parse_data_files()
+    if simulations == None:
+        simulations = util.parse_data_files()
+    
     by_agents = util.get_simulations_by_parameter_value(
         simulations, 
         util.SimulationDataFileParser.NUMAGENTS,
@@ -147,17 +176,28 @@ def compute_pvalues_for_agent_count(agents):
     return p_values
 
 
-def print_pvalues(agent_counts):
+def print_pvalues():
     """Computes and prints the p-values for the difference between
-    each consecutive exit number, for each specified agent count.
+    each consecutive exit number, for each agent count.
     E.g. p-values for 50 agents: from 1 to 2 exits, 2 to 3 exits, 
     and 3 to 4 exits. Then for 100 agents, and so on.
+    Returns a 2d list of the p-values as well.
     """
+    simulations = util.parse_data_files()
+    agent_counts = util.get_agent_counts(simulations)
+
+    p_values_list = []
     for count in agent_counts:
-        pvalues = compute_pvalues_for_agent_count(count)
+        # Pass in precomputed parsed data such that it is not 
+        # recomupted for every agent count
+        pvalues = compute_pvalues_for_agent_count(count, simulations=simulations)
         print("p-values for", count, "agents")
         print(pvalues)
         print("______________________")
+
+        p_values_list.append((count, pvalues))
+
+    return p_values_list
 
 
 def main():
@@ -167,17 +207,15 @@ def main():
     
     """Print p-values
     """
-    simulations = util.parse_data_files()
-    agent_counts = util.get_agent_counts(simulations)
-    print_pvalues(agent_counts)
+    print_pvalues()
     
     """Plots
     """
     plot_avgevac_times_vs_agent_count_per_exit()
-    #plot_evacuation_times(util.get_simulations_by_agents_exits(220, 4)[0].get_parsed_file())
-    #plot_agents_vs_time(util.get_simulations_by_agents_exits(220, 1)[0].get_parsed_file())
-    
-    
+    #plot_evacuation_times(util.get_simulations_by_agents_exits(40, 3)[0].get_parsed_file())
+    #plot_evacuation_times_hist(util.get_simulations_by_agents_exits(40, 4)[0].get_parsed_file())
+    #plot_agents_vs_time(util.get_simulations_by_agents_exits(40, 4)[0].get_parsed_file(),
+    #mode="median")
     
 
 if __name__ == "__main__":

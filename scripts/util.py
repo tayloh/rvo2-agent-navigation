@@ -1,6 +1,6 @@
 import os
 
-from scipy.stats import ttest_ind
+from scipy.stats import ttest_ind, ks_2samp, mannwhitneyu
 
 DATA_DIRECTORY = "./data"
 
@@ -167,8 +167,18 @@ def get_slowest_run(simulation):
     runs = simulation.get_agents_vs_time_data()
     return max(runs, key=len)
 
+def get_median_run(simulation):
+    """Given a simulation, 
+    returns the run with median-high length.
+    """
+    runs = simulation.get_agents_vs_time_data()
+    sorted_runs = sorted(runs, key=len)
+    return sorted_runs[len(sorted_runs)//2]
+
 def compute_p_value(null_hyp, alt_hyp):
-    return ttest_ind(null_hyp, alt_hyp).pvalue
+    #return ttest_ind(null_hyp, alt_hyp, equal_var=False, alternative="greater").pvalue
+    #return ks_2samp(null_hyp, alt_hyp).pvalue
+    return mannwhitneyu(null_hyp, alt_hyp, alternative="greater").pvalue
 
 def mean(numbers):
     return sum(numbers) / len(numbers)
