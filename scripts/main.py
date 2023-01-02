@@ -75,16 +75,32 @@ def plot_avgevac_times_vs_agent_count_per_exit(print_data=False):
         linestyle="", marker="o", markersize=3)
 
     # Print the multiplicative decrease going from i-1 to i exits
-    if print_data:    
+    if print_data:
+        mult_changes_in_evacuation_time = []
+        changes_in_evacuation_time = []    
         avg_of_increases = []
+        
+        # Number of means arrays saved is number of exits
         for i in range(1, len(means_saved)):
             avg_increase = 0
+            mult_changes_for_this_nr_exits = []
+            changes_for_this_nr_exits = []
             for j in range(len(means_saved[0])):
                 # One more exit vs one less exit
-                avg_increase += means_saved[i-1][j] / means_saved[i][j]
+                mult_change = means_saved[i-1][j] / means_saved[i][j]
+                change = means_saved[i-1][j] - means_saved[i][j]
+                avg_increase += mult_change
+                mult_changes_for_this_nr_exits.append(mult_change)
+                changes_for_this_nr_exits.append(change)
+
             avg_increase /= len(means_saved[0])
             avg_of_increases.append(avg_increase)
-        print(avg_of_increases)
+            mult_changes_in_evacuation_time.append(mult_changes_for_this_nr_exits)
+            changes_in_evacuation_time.append(changes_for_this_nr_exits)
+
+        print("Avg. of change (over agent counts) for each nr. of exits:", avg_of_increases)
+        print("Exact mult. change per agent count, for each nr. of exits:", mult_changes_in_evacuation_time)
+        print("Exact change per agent count, for each nr. of exits:", changes_in_evacuation_time)
 
     plt.xticks(agents)
     plt.xlabel("Number of agents")
@@ -214,6 +230,92 @@ def print_pvalues():
     return p_values_list
 
 
+def plot_multiplicative_change_in_evac_time():
+
+    # Values from printed output in 
+    # plot_avgevac_times_vs_agent_count_per_exit()
+    
+    plt.figure(figsize=(9,9))
+
+    exits_1to2 = [1.0481646509654148, 1.2729222520107237, 2.12400875034181, 3.238745822685276, 
+    3.5070577856197613, 3.3390993959362985, 3.37902397260274, 3.1874004845967465, 
+    2.913927248715225, 2.8639930469332007, 2.6729021572957365]
+
+    exits_2to3 = [1.0068361461226234, 1.0830429732868758, 1.2375634517766498, 1.4630428530342248, 
+    1.5873497490955772, 1.7691635091809965, 1.9299405155320555, 1.9900805951642901, 
+    2.1352991662579694, 2.149108762941616, 2.2763787519938132]
+
+    exits_3to4 = [0.9803141361256545, 0.9963355834136932, 1.04805816634155, 1.0673829623944744, 
+    1.1319682959048876, 1.1776887871853547, 1.2211460855528653, 1.2587358016127632, 
+    1.2539975399753998, 1.2462090981644054, 1.2780454657771187]
+
+    agents = [20, 40, 60, 80, 100, 120, 140, 160, 180, 200, 220]
+
+    plt.plot(agents, exits_1to2, 
+        label="1 to 2 exits", 
+        linestyle="", marker="o", color="orange", markersize=3)
+
+    plt.plot(agents, exits_2to3, 
+        label="2 to 3 exits", 
+        linestyle="", marker="o", color="green", markersize=3)
+
+    plt.plot(agents, exits_3to4, 
+        label="3 to 4 exits", 
+        linestyle="", marker="o", color="red", markersize=3)
+
+    plt.xticks(agents)
+    plt.xlabel("Number of agents")
+
+    # Remember it is average evacuation time over 100 runs
+    plt.ylabel("Factor difference in evacuation time")
+
+    plt.title("Factor difference in evacuation time vs. Number of agents")
+    plt.legend(loc=2)
+    plt.show()
+
+    
+def plot_change_in_evac_time():
+
+    # Values from printed output in 
+    # plot_avgevac_times_vs_agent_count_per_exit()
+    
+    plt.figure(figsize=(9,9))
+
+    exits_1to2 = [0.567499999999999, 3.817499999999999, 20.5525, 56.942499999999995, 85.2525, 
+    106.48749999999998, 138.935, 157.985, 166.66000000000003, 187.65749999999997, 196.96749999999997]
+
+    exits_2to3 = [0.08000000000000007, 1.0725000000000016, 3.51, 8.049999999999997, 12.582500000000003, 
+    19.792499999999997, 28.139999999999997, 35.9325, 46.2975, 53.83, 66.0175]
+
+    exits_3to4 = [-0.23499999999999943, -0.04750000000000121, 0.6775000000000002, 1.0975000000000001, 
+    2.4974999999999987, 3.8825000000000003, 5.48, 7.459999999999997, 8.259999999999998, 9.254999999999995, 
+    11.252499999999998]
+
+
+    agents = [20, 40, 60, 80, 100, 120, 140, 160, 180, 200, 220]
+
+    plt.plot(agents, exits_1to2, 
+        label="1 to 2 exits", 
+        linestyle="", marker="o", color="orange", markersize=3)
+
+    plt.plot(agents, exits_2to3, 
+        label="2 to 3 exits", 
+        linestyle="", marker="o", color="green", markersize=3)
+
+    plt.plot(agents, exits_3to4, 
+        label="3 to 4 exits", 
+        linestyle="", marker="o", color="red", markersize=3)
+
+    plt.xticks(agents)
+    plt.xlabel("Number of agents")
+
+    # Remember it is average evacuation time over 100 runs
+    plt.ylabel("Difference in evacuation time (s)")
+
+    plt.title("Difference in evacuation time vs. Number of agents")
+    plt.legend(loc=2)
+    plt.show()
+
 def main():
     # Remember that every call to parse_data_files() is quite
     # expensive... especially if there's a lot of files
@@ -225,11 +327,14 @@ def main():
     
     """Plots
     """
-    plot_avgevac_times_vs_agent_count_per_exit()
+    plot_avgevac_times_vs_agent_count_per_exit(print_data=False)
     #plot_evacuation_times(util.get_simulations_by_agents_exits(40, 3)[0].get_parsed_file())
     #plot_evacuation_times_hist(util.get_simulations_by_agents_exits(40, 4)[0].get_parsed_file())
     #plot_agents_vs_time(util.get_simulations_by_agents_exits(40, 4)[0].get_parsed_file(),
     #mode="median")
+
+    #plot_multiplicative_change_in_evac_time()
+    #plot_change_in_evac_time()
     
 
 if __name__ == "__main__":
