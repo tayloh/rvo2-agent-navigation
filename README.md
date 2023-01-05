@@ -9,6 +9,7 @@ Simulates the evacuation of a rectangular room with a specified number of exits 
 * Number of agents\*
 * Agent radius\* (m)
 * Agent maximum speed\* (m / s)
+* Use random size and speed - experimental
 * Simulation time step\* (s)
 * Number of exits
 * Exit width (m)
@@ -16,7 +17,7 @@ Simulates the evacuation of a rectangular room with a specified number of exits 
 * Room wall length (m)
 * Room wall width (m)
 * Final goal position y-offset (m)
-* Final goal radius (m)
+* Final goal radius (m) - deprecated, agents are considered evacuated as soon as they leave the room
 
 \*Part of RVO2 library that implements ORCA (see Credits).
 
