@@ -565,10 +565,18 @@ public class SimulationController : MonoBehaviour
     {
         foreach (int id in _agentGameObjectsMap.Keys)
         {
-            if (RVOMath.absSq(Simulator.Instance.getAgentPosition(id) - _agentPathsMap[id].GetLastGoal()) > GoalRadius * GoalRadius)
+            // If the scenario is exits, just check if they evacuated the building
+            // Exit y locations are at WallLength
+            if (Scenario == ScenarioType.Exits && Simulator.Instance.getAgentPosition(id).y() < WallLength)
             {
                 return false;
             }
+
+            //if (Scenario != ScenarioType.Exits && 
+            //    RVOMath.absSq(Simulator.Instance.getAgentPosition(id) - _agentPathsMap[id].GetLastGoal()) > GoalRadius * GoalRadius)
+            //{
+            //    return false;
+            //}
         }
 
         return true;
@@ -723,10 +731,15 @@ public class SimulationController : MonoBehaviour
         int numEvacuated = 0;
         foreach (int id in _agentGameObjectsMap.Keys)
         {
-            if (RVOMath.absSq(Simulator.Instance.getAgentPosition(id) - _agentPathsMap[id].GetLastGoal()) < GoalRadius * GoalRadius)
+            //if (RVOMath.absSq(Simulator.Instance.getAgentPosition(id) - _agentPathsMap[id].GetLastGoal()) < GoalRadius * GoalRadius)
+            //{
+            //    numEvacuated++;
+            //}
+            if (Simulator.Instance.getAgentPosition(id).y() >= WallLength)
             {
                 numEvacuated++;
             }
+
         }
         return numEvacuated;
     }
