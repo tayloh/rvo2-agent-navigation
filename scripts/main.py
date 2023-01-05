@@ -105,7 +105,7 @@ def plot_avgevac_times_vs_agent_count_per_exit(print_data=False):
     plt.xticks(agents)
     plt.xlabel("Number of agents")
     plt.ylabel("Avg. evacuation time (s)")
-    plt.title("Avg. evacuation times vs. Number of agents")
+    plt.title("Avg. evacuation time vs. Number of agents")
     plt.legend(loc=2)
     plt.show()
 
@@ -132,7 +132,7 @@ def plot_evacuation_times(file):
 def plot_agents_vs_time(file, mode="median"):
     """Takes a file path to a simulation file and 
     plots the number of evacuated agents vs. simulation
-    time. Uses the slowest run (to be changed).
+    time. Specify mode: median, slowest, fastest.
     """
     simulation = util.SimulationDataFileParser(file)
 
@@ -153,7 +153,7 @@ def plot_agents_vs_time(file, mode="median"):
 
     plt.xlabel("Time (s)")
     plt.ylabel("Agents evacuated")
-    plt.title("Agents evacuated vs. time (agents:" + str(agents) + ", exits:" + str(exits) + ")")
+    plt.title("Agents evacuated vs. Time (agents:" + str(agents) + ", exits:" + str(exits) + ")")
     plt.plot(x_values, agents_evaced_each_time_step)
     plt.show()
 
@@ -237,17 +237,17 @@ def plot_multiplicative_change_in_evac_time():
     
     plt.figure(figsize=(9,9))
 
-    exits_1to2 = [1.0481646509654148, 1.2729222520107237, 2.12400875034181, 3.238745822685276, 
-    3.5070577856197613, 3.3390993959362985, 3.37902397260274, 3.1874004845967465, 
-    2.913927248715225, 2.8639930469332007, 2.6729021572957365]
+    exits_1to2 = [1.0764248704663213, 1.3669144981412642, 2.0926808749298935, 3.054178790007023, 
+    3.5573806717737186, 3.550697830839079, 3.358808847577244, 3.1179729682041146, 
+    2.910311200344185, 2.8084619360555267, 2.804493937796521]
 
-    exits_2to3 = [1.0068361461226234, 1.0830429732868758, 1.2375634517766498, 1.4630428530342248, 
-    1.5873497490955772, 1.7691635091809965, 1.9299405155320555, 1.9900805951642901, 
-    2.1352991662579694, 2.149108762941616, 2.2763787519938132]
+    exits_2to3 = [1.020938946440379, 1.0753547871277234, 1.2384094460843895, 1.4191940766054392, 
+    1.5900679315999062, 1.7992133924969747, 1.9368228038006334, 2.0647770329350044, 
+    2.1380388790090143, 2.2178612369670834, 2.1736930054905703]
 
-    exits_3to4 = [0.9803141361256545, 0.9963355834136932, 1.04805816634155, 1.0673829623944744, 
-    1.1319682959048876, 1.1776887871853547, 1.2211460855528653, 1.2587358016127632, 
-    1.2539975399753998, 1.2462090981644054, 1.2780454657771187]
+    exits_3to4 = [0.9975813544415127, 1.0107070707070707, 1.0549551199853453, 1.105984251968504, 
+    1.1715148188803512, 1.1759962049335864, 1.2122865514802466, 1.237399693445136, 
+    1.3364202589739387, 1.3276561820553705, 1.3778698769817774]
 
     agents = [20, 40, 60, 80, 100, 120, 140, 160, 180, 200, 220]
 
@@ -281,15 +281,15 @@ def plot_change_in_evac_time():
     
     plt.figure(figsize=(9,9))
 
-    exits_1to2 = [0.567499999999999, 3.817499999999999, 20.5525, 56.942499999999995, 85.2525, 
-    106.48749999999998, 138.935, 157.985, 166.66000000000003, 187.65749999999997, 196.96749999999997]
+    exits_1to2 = [0.8849999999999998, 4.935000000000002, 19.4825, 51.185, 86.7975, 113.76750000000001, 
+    137.035, 150.0425, 166.5075, 183.69, 205.3875]
 
-    exits_2to3 = [0.08000000000000007, 1.0725000000000016, 3.51, 8.049999999999997, 12.582500000000003, 
-    19.792499999999997, 28.139999999999997, 35.9325, 46.2975, 53.83, 66.0175]
+    exits_2to3 = [0.2375000000000007, 0.942499999999999, 3.4324999999999974, 7.359999999999999, 
+    12.594999999999999, 19.8125, 28.099999999999998, 36.5325, 46.394999999999996, 
+    55.775000000000006, 61.457499999999996]
 
-    exits_3to4 = [-0.23499999999999943, -0.04750000000000121, 0.6775000000000002, 1.0975000000000001, 
-    2.4974999999999987, 3.8825000000000003, 5.48, 7.459999999999997, 8.259999999999998, 9.254999999999995, 
-    11.252499999999998]
+    exits_3to4 = [-0.027499999999999858, 0.13250000000000028, 0.75, 1.682500000000001, 3.125, 
+    3.710000000000001, 5.252500000000001, 6.582500000000003, 10.2625, 11.302500000000002, 14.36]
 
 
     agents = [20, 40, 60, 80, 100, 120, 140, 160, 180, 200, 220]
@@ -328,9 +328,9 @@ def main():
     """Plots
     """
     plot_avgevac_times_vs_agent_count_per_exit(print_data=False)
-    #plot_evacuation_times(util.get_simulations_by_agents_exits(40, 3)[0].get_parsed_file())
-    #plot_evacuation_times_hist(util.get_simulations_by_agents_exits(40, 4)[0].get_parsed_file())
-    #plot_agents_vs_time(util.get_simulations_by_agents_exits(40, 4)[0].get_parsed_file(),
+    #plot_evacuation_times(util.get_simulations_by_agents_exits(220, 4)[0].get_parsed_file())
+    #plot_evacuation_times_hist(util.get_simulations_by_agents_exits(220, 4)[0].get_parsed_file())
+    #plot_agents_vs_time(util.get_simulations_by_agents_exits(40, 3)[0].get_parsed_file(),
     #mode="median")
 
     #plot_multiplicative_change_in_evac_time()
